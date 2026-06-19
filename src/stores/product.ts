@@ -24,10 +24,11 @@ export const useProductStore = defineStore('product', () => {
     const all = products.value.length
     const online = products.value.filter(p => p.status === 'online').length
     const pending = products.value.filter(p => p.status === 'pending').length
+    const approved = products.value.filter(p => p.status === 'approved').length
     const rejected = products.value.filter(p => p.status === 'rejected').length
     const offline = products.value.filter(p => p.status === 'offline').length
 
-    return { all, online, pending, rejected, offline }
+    return { all, online, pending, approved, rejected, offline }
   })
 
   const filteredProducts = computed(() => {

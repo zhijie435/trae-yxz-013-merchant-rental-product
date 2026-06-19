@@ -21,7 +21,7 @@ interface Product {
 
 const router = Router()
 
-let products: Product[] = [
+const products: Product[] = [
   {
     id: 1,
     name: '高档婚纱礼服租赁',

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElMessage, ElImage, ElIcon, ElSwitch, ElDivider, ElCollapse, ElCollapseItem, ElTabs, ElTabPane } from 'element-plus'
-import { Plus, Delete, VideoPlay, InfoFilled, Setting, PriceTag, Wallet, Truck, DocumentChecked, Check, Refresh, Sparkles } from '@element-plus/icons-vue'
+import { Plus, Delete, VideoPlay, InfoFilled, Setting, PriceTag, Wallet, Van, DocumentChecked, Check, Refresh, RefreshRight } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
 import { CATEGORY_OPTIONS, BRAND_OPTIONS, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS, EXPRESS_COMPANY_OPTIONS, DELIVERY_METHOD_OPTIONS, WASHING_INSTRUCTIONS_OPTIONS, SIZE_OPTIONS, COLOR_OPTIONS, DEPOSIT_TIER_PRESETS, TIERED_PRICE_PRESETS } from '@/types/product'
 import type { ProductSpecification, RentalConfig, SpecificationOption, DeliveryConfig, TieredPrice, DepositTier, ProductAttributes, ProductCode } from '@/types/product'
@@ -203,9 +203,13 @@ const handleVideoRemove = () => {
   ElMessage.success('视频移除成功')
 }
 
-const handleCategoryChange = (value: string) => {
-  formData.value.category = value
-  formData.value.subCategory = ''
+const handleCategoryChange = (value: string | string[]) => {
+  if (Array.isArray(value)) {
+    formData.value.category = value[0] || ''
+    formData.value.subCategory = value[1] || ''
+  } else {
+    formData.value.category = value
+  }
 }
 
 const handleSpecificationAdd = () => {
@@ -460,12 +464,12 @@ const suggestedDeposit = computed(() => calculateSuggestedDeposit())
 
               <el-form-item label="产品分类" required>
                 <el-cascader
-                  v-model="[formData.category, formData.subCategory]"
+                  v-model="formData.category"
                   :options="CATEGORY_OPTIONS"
                   :props="{ checkStrictly: true, expandTrigger: 'hover' }"
                   placeholder="请选择产品分类"
                   class="w-full"
-                  @change="([val]) => handleCategoryChange(val as string)"
+                  @change="handleCategoryChange"
                 />
               </el-form-item>
 

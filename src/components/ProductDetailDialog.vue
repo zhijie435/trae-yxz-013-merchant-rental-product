@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon, ElInputNumber, ElCheckbox, ElButton, ElMessage, ElTabs, ElTabPane } from 'element-plus'
-import { Document, List, Setting, Collection, Van, ShoppingCart, Money, Warning, PriceTag, Wallet, Truck, Check, Clock } from '@element-plus/icons-vue'
+import { Document, List, Setting, Collection, Van, ShoppingCart, Money, Warning, PriceTag, Wallet, Check, Clock } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
 import { STATUS_CONFIG, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS, DELIVERY_METHOD_OPTIONS, AUDIT_LEVEL_CONFIG } from '@/types/product'
 

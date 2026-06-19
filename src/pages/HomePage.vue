@@ -73,11 +73,11 @@ const handleBatchAction = async (action: BatchAction) => {
       ElMessage.info('已取消删除')
     }
   } else {
-    const status = action.type === 'online' ? 'online' : 'offline'
+    const status = action.type === 'online' ? 'online' : action.type === 'offline' ? 'offline' : 'offline'
 
     try {
       const productIds = Array.from(productStore.selectedProducts)
-      const response = await productApi.batchOperation(productIds, action.type)
+      const response = await productApi.batchOperation(productIds, action.type as 'online' | 'offline' | 'delete')
 
       if (response.code === 200) {
         productStore.batchUpdateStatus(productIds, status)
