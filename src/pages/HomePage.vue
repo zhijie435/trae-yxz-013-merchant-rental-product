@@ -3,11 +3,17 @@ import { ref, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FilterBar from '@/components/FilterBar.vue'
 import ProductCard from '@/components/ProductCard.vue'
+import ProductEditDialog from '@/components/ProductEditDialog.vue'
+import ProductDetailDialog from '@/components/ProductDetailDialog.vue'
 import { useProductStore } from '@/stores/product'
 import { productApi } from '@/api/product'
 import type { ProductStatus, Product, BatchAction } from '@/types/product'
 
 const productStore = useProductStore()
+
+const editDialogVisible = ref(false)
+const detailDialogVisible = ref(false)
+const currentProduct = ref<Product | null>(null)
 
 onMounted(() => {
   loadProducts()
@@ -133,20 +139,38 @@ const handleProductDelete = async (productId: number) => {
 }
 
 const handleProductView = (product: Product) => {
-  ElMessage.info(`查看商品: ${product.name}`)
+  currentProduct.value = product
+  detailDialogVisible.value = true
 }
 
 const handleProductEdit = (product: Product) => {
-  ElMessage.info(`编辑商品: ${product.name}`)
+  currentProduct.value = product
+  editDialogVisible.value = true
+}
+
+const handleSaveProduct = async (productData: Partial<Product>) => {
+  try {
+    if (currentProduct.value) {
+      const response = await productApi.updateProduct(currentProduct.value.id, productData)
+      if (response.code === 200) {
+        ElMessage.success('商品更新成功')
+        loadProducts()
+      }
+    }
+  } catch (error) {
+    ElMessage.error('保存商品失败')
+  }
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <div class="container mx-auto px-4 py-8">
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">租赁商品管理</h1>
-        <p class="text-gray-600">高效管理您的租赁商品库存和状态</p>
+      <div class="mb-8">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-3">
+          租赁商品管理
+        </h1>
+        <p class="text-gray-600 text-lg">高效管理您的租赁商品库存和状态</p>
       </div>
 
       <FilterBar
@@ -157,13 +181,13 @@ const handleProductEdit = (product: Product) => {
       />
 
       <div v-if="productStore.loading" class="flex justify-center items-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent shadow-lg"></div>
       </div>
 
       <div v-else>
-        <div v-if="productStore.filteredProducts.length === 0" class="text-center py-20">
-          <div class="text-6xl mb-4">📦</div>
-          <div class="text-xl text-gray-500 mb-2">暂无商品</div>
+        <div v-if="productStore.filteredProducts.length === 0" class="text-center py-20 bg-white rounded-2xl shadow-sm">
+          <div class="text-8xl mb-6">📦</div>
+          <div class="text-2xl text-gray-600 font-medium mb-3">暂无商品</div>
           <div class="text-gray-400">点击上方按钮添加新商品</div>
         </div>
 
@@ -187,19 +211,50 @@ const handleProductEdit = (product: Product) => {
 
       <div
         v-if="productStore.filteredProducts.length > 0"
-        class="mt-8 flex justify-center"
+        class="mt-8 bg-white rounded-xl p-6 shadow-sm"
       >
-        <div class="text-gray-500 text-sm">
-          共 {{ productStore.pagination.total }} 个商品，当前显示
-          {{ productStore.filteredProducts.length }} 个
+        <div class="flex items-center justify-between text-sm text-gray-600">
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-2">
+              <span class="font-semibold">共</span>
+              <span class="text-blue-600 font-bold text-lg">{{ productStore.pagination.total }}</span>
+              <span class="font-semibold">个商品</span>
+            </span>
+            <span class="text-gray-300">|</span>
+            <span class="flex items-center gap-2">
+              <span class="font-semibold">当前显示</span>
+              <span class="text-green-600 font-bold text-lg">{{ productStore.filteredProducts.length }}</span>
+              <span class="font-semibold">个</span>
+            </span>
+            <span v-if="productStore.selectedCount > 0" class="text-gray-300">|</span>
+            <span v-if="productStore.selectedCount > 0" class="flex items-center gap-2">
+              <span class="text-orange-500 font-bold">{{ productStore.selectedCount }}</span>
+              <span class="text-gray-600">个已选中</span>
+            </span>
+          </div>
+
+          <div class="text-gray-400">
+            筛选状态: <span class="font-semibold text-gray-700">{{ productStore.currentStatus === 'all' ? '全部' : productStore.currentStatus }}</span>
+          </div>
         </div>
       </div>
     </div>
+
+    <ProductEditDialog
+      v-model:visible="editDialogVisible"
+      :product="currentProduct"
+      @save="handleSaveProduct"
+    />
+
+    <ProductDetailDialog
+      v-model:visible="detailDialogVisible"
+      :product="currentProduct"
+    />
   </div>
 </template>
 
 <style scoped>
 .container {
-  max-width: 1400px;
+  max-width: 1600px;
 }
 </style>
