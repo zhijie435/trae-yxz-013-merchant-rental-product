@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon } from 'element-plus'
-import { Document, List, Setting, Collection, Van } from '@element-plus/icons-vue'
+import { ref, computed, watch } from 'vue'
+import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon, ElInputNumber, ElCheckbox, ElButton } from 'element-plus'
+import { Document, List, Setting, Collection, Van, ShoppingCart, Money } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
 import { STATUS_CONFIG, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS, DELIVERY_METHOD_OPTIONS } from '@/types/product'
 
@@ -12,16 +12,59 @@ interface Props {
 
 interface Emits {
   (e: 'update:visible', value: boolean): void
+  (e: 'order', orderData: OrderData): void
+}
+
+interface OrderData {
+  productId: number
+  quantity: number
+  rentalDays: number
+  waiveDeposit: boolean
+  totalAmount: number
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const orderQuantity = ref(1)
+const rentalDays = ref(1)
+const waiveDeposit = ref(false)
+
+watch(() => props.visible, (val) => {
+  if (val) {
+    orderQuantity.value = 1
+    rentalDays.value = 1
+    waiveDeposit.value = false
+  }
+})
 
 const statusInfo = computed(() => {
   if (props.product) {
     return STATUS_CONFIG[props.product.status]
   }
   return { label: '', type: 'info' as const }
+})
+
+const rentalFee = computed(() => {
+  if (!props.product) return 0
+  return props.product.price * rentalDays.value * orderQuantity.value
+})
+
+const depositFee = computed(() => {
+  if (!props.product?.rentalConfig || waiveDeposit.value) return 0
+  return props.product.rentalConfig.depositAmount * orderQuantity.value
+})
+
+const serviceFee = computed(() => {
+  if (!props.product?.deliveryConfig) return 0
+  if (props.product.deliveryConfig.method === 'installer') {
+    return props.product.deliveryConfig.serviceFee || 0
+  }
+  return 0
+})
+
+const totalAmount = computed(() => {
+  return rentalFee.value + depositFee.value + serviceFee.value
 })
 
 const formatDate = (dateStr: string) => {
@@ -37,6 +80,21 @@ const formatDate = (dateStr: string) => {
 
 const handleClose = () => {
   emit('update:visible', false)
+}
+
+const handleOrder = () => {
+  if (!props.product) return
+  
+  const orderData: OrderData = {
+    productId: props.product.id,
+    quantity: orderQuantity.value,
+    rentalDays: rentalDays.value,
+    waiveDeposit: waiveDeposit.value,
+    totalAmount: totalAmount.value
+  }
+  
+  emit('order', orderData)
+  handleClose()
 }
 
 const getRentalMethodLabel = (value: string) => {
@@ -304,12 +362,123 @@ const getDeliveryMethodLabel = (value: string) => {
             </div>
           </template>
         </div>
+
+        <div class="detail-section order-section" v-if="product.status === 'online' && product.stock > 0">
+          <h3 class="section-title">
+            <el-icon><ShoppingCart /></el-icon>
+            租赁下单
+          </h3>
+          
+          <div class="order-form">
+            <div class="order-form-item">
+              <div class="order-form-label">租赁数量</div>
+              <el-input-number
+                v-model="orderQuantity"
+                :min="product.rentalConfig?.minimumQuantity || 1"
+                :max="product.stock"
+                :step="1"
+                controls-position="right"
+                class="w-full"
+              />
+              <span class="ml-2 text-gray-500 text-sm">台</span>
+            </div>
+
+            <div class="order-form-item">
+              <div class="order-form-label">租赁天数</div>
+              <el-input-number
+                v-model="rentalDays"
+                :min="1"
+                :max="365"
+                :step="1"
+                controls-position="right"
+                class="w-full"
+              />
+              <span class="ml-2 text-gray-500 text-sm">天</span>
+            </div>
+
+            <div class="order-form-item waive-deposit-item">
+              <el-checkbox v-model="waiveDeposit" class="waive-checkbox">
+                <span class="waive-checkbox-label">申请免押</span>
+              </el-checkbox>
+              <div class="text-xs text-gray-400 mt-1">
+                免押可不支付押金，降低租赁成本
+              </div>
+            </div>
+          </div>
+
+          <el-divider />
+
+          <h4 class="section-subtitle">
+            <el-icon><Money /></el-icon>
+            费用明细
+          </h4>
+          
+          <div class="fee-details">
+            <div class="fee-item">
+              <div class="fee-label">租金费用</div>
+              <div class="fee-value">
+                ¥{{ rentalFee.toFixed(2) }}
+              </div>
+              <div class="fee-desc">
+                ({{ product.price }}元/天 × {{ rentalDays }}天 × {{ orderQuantity }}台)
+              </div>
+            </div>
+
+            <div class="fee-item" v-if="depositFee > 0">
+              <div class="fee-label">押金</div>
+              <div class="fee-value">
+                ¥{{ depositFee.toFixed(2) }}
+              </div>
+              <div class="fee-desc">
+                ({{ product.rentalConfig?.depositAmount }}元 × {{ orderQuantity }}台)
+              </div>
+            </div>
+
+            <div class="fee-item" v-else-if="waiveDeposit">
+              <div class="fee-label">押金</div>
+              <div class="fee-value text-green-500">
+                已免押
+              </div>
+              <div class="fee-desc text-green-500">
+                免押优惠节省 ¥{{ (product.rentalConfig?.depositAmount || 0) * orderQuantity }} 元
+              </div>
+            </div>
+
+            <div class="fee-item" v-if="serviceFee > 0">
+              <div class="fee-label">服务费</div>
+              <div class="fee-value">
+                ¥{{ serviceFee.toFixed(2) }}
+              </div>
+              <div class="fee-desc">
+                (专业操作员服务费)
+              </div>
+            </div>
+
+            <el-divider />
+
+            <div class="fee-total">
+              <div class="fee-total-label">应付总额</div>
+              <div class="fee-total-value">
+                ¥{{ totalAmount.toFixed(2) }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <template #footer>
       <div class="dialog-footer">
-        <el-button type="primary" @click="handleClose">关闭</el-button>
+        <el-button @click="handleClose">关闭</el-button>
+        <el-button 
+          v-if="product && product.status === 'online' && product.stock > 0"
+          type="primary" 
+          @click="handleOrder"
+          size="large"
+        >
+          <el-icon class="mr-1"><ShoppingCart /></el-icon>
+          立即下单
+        </el-button>
       </div>
     </template>
   </el-dialog>
@@ -495,6 +664,113 @@ const getDeliveryMethodLabel = (value: string) => {
   font-size: 14px;
   color: #303133;
   font-weight: 500;
+}
+
+.order-section {
+  background: linear-gradient(135deg, #f0f9eb 0%, #e8f5e9 100%);
+  border: 2px solid #67c23a;
+}
+
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.order-form-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-form-label {
+  flex: 0 0 80px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #606266;
+}
+
+.waive-deposit-item {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+}
+
+.waive-checkbox {
+  font-weight: 600;
+}
+
+.waive-checkbox-label {
+  font-size: 14px;
+  color: #303133;
+  font-weight: 600;
+}
+
+.fee-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.fee-item {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s;
+}
+
+.fee-item:hover {
+  border-color: #67c23a;
+  box-shadow: 0 2px 8px rgba(103, 194, 58, 0.1);
+}
+
+.fee-label {
+  font-size: 13px;
+  color: #909399;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.fee-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #303133;
+}
+
+.fee-desc {
+  font-size: 11px;
+  color: #c0c4cc;
+  margin-top: 4px;
+}
+
+.fee-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.fee-total-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.fee-total-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: white;
 }
 
 @media (max-width: 1200px) {

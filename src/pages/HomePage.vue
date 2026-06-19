@@ -161,6 +161,24 @@ const handleSaveProduct = async (productData: Partial<Product>) => {
     ElMessage.error('保存商品失败')
   }
 }
+
+const handleOrder = async (orderData: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认租赁下单？\n\n商品ID: ${orderData.productId}\n租赁数量: ${orderData.quantity}台\n租赁天数: ${orderData.rentalDays}天\n免押: ${orderData.waiveDeposit ? '是' : '否'}\n应付总额: ¥${orderData.totalAmount.toFixed(2)}`,
+      '租赁下单确认',
+      {
+        confirmButtonText: '确认下单',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+    
+    ElMessage.success('订单提交成功！')
+  } catch {
+    ElMessage.info('已取消下单')
+  }
+}
 </script>
 
 <template>
@@ -249,6 +267,7 @@ const handleSaveProduct = async (productData: Partial<Product>) => {
     <ProductDetailDialog
       v-model:visible="detailDialogVisible"
       :product="currentProduct"
+      @order="handleOrder"
     />
   </div>
 </template>
