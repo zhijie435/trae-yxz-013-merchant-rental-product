@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon, ElInputNumber, ElCheckbox, ElButton } from 'element-plus'
-import { Document, List, Setting, Collection, Van, ShoppingCart, Money } from '@element-plus/icons-vue'
+import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon, ElInputNumber, ElCheckbox, ElButton, ElMessage } from 'element-plus'
+import { Document, List, Setting, Collection, Van, ShoppingCart, Money, Warning } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
 import { STATUS_CONFIG, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS, DELIVERY_METHOD_OPTIONS } from '@/types/product'
 
@@ -85,6 +85,11 @@ const handleClose = () => {
 const handleOrder = () => {
   if (!props.product) return
   
+  if (!isRentalDaysValid.value) {
+    ElMessage.warning(`租赁天数不能低于起租规则（最低${minimumRentalDaysLabel.value}）`)
+    return
+  }
+  
   const orderData: OrderData = {
     productId: props.product.id,
     quantity: orderQuantity.value,
@@ -111,6 +116,49 @@ const getDeliveryMethodLabel = (value: string) => {
   const method = DELIVERY_METHOD_OPTIONS.find(m => m.value === value)
   return method?.label || value
 }
+
+const getMinimumDaysFromRule = (rule: string | undefined): number => {
+  switch (rule) {
+    case '1day':
+      return 1
+    case '3days':
+      return 3
+    case '1week':
+      return 7
+    case '1month':
+      return 30
+    case 'none':
+    default:
+      return 1
+  }
+}
+
+const minimumRentalDays = computed(() => {
+  if (!props.product?.rentalConfig) return 1
+  return getMinimumDaysFromRule(props.product.rentalConfig.minimumRentalTime)
+})
+
+const minimumRentalDaysLabel = computed(() => {
+  if (!props.product?.rentalConfig) return '无限制'
+  const rule = props.product.rentalConfig.minimumRentalTime
+  switch (rule) {
+    case '1day':
+      return '1天起租'
+    case '3days':
+      return '3天起租'
+    case '1week':
+      return '1周起租'
+    case '1month':
+      return '1月起租'
+    case 'none':
+    default:
+      return '无限制'
+  }
+})
+
+const isRentalDaysValid = computed(() => {
+  return rentalDays.value >= minimumRentalDays.value
+})
 </script>
 
 <template>
@@ -387,13 +435,19 @@ const getDeliveryMethodLabel = (value: string) => {
               <div class="order-form-label">租赁天数</div>
               <el-input-number
                 v-model="rentalDays"
-                :min="1"
+                :min="minimumRentalDays"
                 :max="365"
                 :step="1"
                 controls-position="right"
                 class="w-full"
               />
               <span class="ml-2 text-gray-500 text-sm">天</span>
+              <span 
+                v-if="minimumRentalDays > 1" 
+                class="ml-2 text-orange-500 text-xs font-bold"
+              >
+                (最低{{ minimumRentalDaysLabel }})
+              </span>
             </div>
 
             <div class="order-form-item waive-deposit-item">
@@ -414,6 +468,14 @@ const getDeliveryMethodLabel = (value: string) => {
           </h4>
           
           <div class="fee-details">
+            <div 
+              v-if="!isRentalDaysValid && minimumRentalDays > 1" 
+              class="fee-warning"
+            >
+              <el-icon><Warning /></el-icon>
+              <span>租赁天数不能低于起租规则（最低{{ minimumRentalDaysLabel }}）</span>
+            </div>
+
             <div class="fee-item">
               <div class="fee-label">租金费用</div>
               <div class="fee-value">
@@ -475,6 +537,7 @@ const getDeliveryMethodLabel = (value: string) => {
           type="primary" 
           @click="handleOrder"
           size="large"
+          :disabled="!isRentalDaysValid"
         >
           <el-icon class="mr-1"><ShoppingCart /></el-icon>
           立即下单
@@ -715,6 +778,23 @@ const getDeliveryMethodLabel = (value: string) => {
   flex-direction: column;
   gap: 12px;
   margin-top: 12px;
+}
+
+.fee-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fef0f0;
+  border: 1px solid #fde2e2;
+  border-radius: 6px;
+  color: #f56c6c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fee-warning .el-icon {
+  font-size: 16px;
 }
 
 .fee-item {
