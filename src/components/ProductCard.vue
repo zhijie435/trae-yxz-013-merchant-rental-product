@@ -101,15 +101,23 @@ const formatPrice = (price: number) => {
     </div>
 
     <div class="p-5">
-      <div class="mb-3">
+      <div class="flex items-center gap-2 mb-3">
         <el-tag size="small" effect="plain" class="font-medium">
           {{ product.category }}
         </el-tag>
+        <el-tag size="small" type="info" effect="plain" v-if="product.brand">
+          {{ product.brand }}
+        </el-tag>
       </div>
 
-      <h3 class="text-lg font-bold mb-3 line-clamp-2 text-gray-800 leading-tight hover:text-blue-600 transition-colors">
+      <h3 class="text-lg font-bold mb-2 line-clamp-2 text-gray-800 leading-tight hover:text-blue-600 transition-colors">
         {{ product.name }}
       </h3>
+
+      <div class="text-xs text-gray-400 mb-3 flex items-center gap-2">
+        <span v-if="product.model">型号: {{ product.model }}</span>
+        <span v-if="product.subCategory">| {{ product.subCategory }}</span>
+      </div>
 
       <p class="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
         {{ product.description }}

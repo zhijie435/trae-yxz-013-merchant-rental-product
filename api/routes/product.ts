@@ -4,12 +4,16 @@ import type { Request, Response } from 'express'
 interface Product {
   id: number
   name: string
+  brand: string
+  model: string
+  category: string
+  subCategory?: string
   description: string
   price: number
   stock: number
   status: 'online' | 'pending' | 'rejected' | 'offline'
   images: string[]
-  category: string
+  video?: string
   createTime: string
   updateTime: string
 }
@@ -20,96 +24,121 @@ let products: Product[] = [
   {
     id: 1,
     name: '高档婚纱礼服租赁',
+    brand: '其他',
+    model: 'WM-2024-001',
+    category: '礼服',
+    subCategory: '婚纱',
     description: '纯手工刺绣，适合婚礼、晚宴等正式场合',
     price: 299.00,
     stock: 5,
     status: 'online',
     images: ['https://picsum.photos/400/300?random=1'],
-    category: '礼服',
+    video: '',
     createTime: '2024-01-15T10:30:00Z',
     updateTime: '2024-01-15T10:30:00Z'
   },
   {
     id: 2,
     name: '商务西装套装',
+    brand: '雅戈尔',
+    model: 'BS-2024-005',
+    category: '西装',
+    subCategory: '商务西装',
     description: '经典黑色修身剪裁，适合商务会议、面试等场合',
     price: 150.00,
     stock: 12,
     status: 'online',
     images: ['https://picsum.photos/400/300?random=2'],
-    category: '西装',
     createTime: '2024-01-14T09:20:00Z',
     updateTime: '2024-01-14T09:20:00Z'
   },
   {
     id: 3,
     name: '汉服古装租赁',
+    brand: '其他',
+    model: 'HF-2024-003',
+    category: '古装',
+    subCategory: '汉服',
     description: '传统汉服，飘逸优雅，适合古风摄影、传统文化活动',
     price: 199.00,
     stock: 8,
     status: 'pending',
     images: ['https://picsum.photos/400/300?random=3'],
-    category: '古装',
     createTime: '2024-01-13T14:45:00Z',
     updateTime: '2024-01-13T14:45:00Z'
   },
   {
     id: 4,
     name: '晚礼服租赁',
+    brand: '其他',
+    model: 'WF-2024-008',
+    category: '礼服',
+    subCategory: '晚礼服',
     description: '奢华晚礼服，闪亮耀眼，适合舞会、派对、晚宴',
     price: 399.00,
     stock: 3,
     status: 'rejected',
     images: ['https://picsum.photos/400/300?random=4'],
-    category: '礼服',
     createTime: '2024-01-12T16:00:00Z',
     updateTime: '2024-01-12T16:00:00Z'
   },
   {
     id: 5,
     name: '运动装备套装',
+    brand: '其他',
+    model: 'SP-2024-012',
+    category: '运动',
+    subCategory: '登山装备',
     description: '专业运动装备，包括登山包、帐篷等，适合户外活动',
     price: 89.00,
     stock: 20,
     status: 'offline',
     images: ['https://picsum.photos/400/300?random=5'],
-    category: '运动',
     createTime: '2024-01-11T11:30:00Z',
     updateTime: '2024-01-11T11:30:00Z'
   },
   {
     id: 6,
     name: '儿童表演服装',
+    brand: '其他',
+    model: 'KT-2024-015',
+    category: '儿童',
+    subCategory: '表演服',
     description: '可爱卡通造型，适合幼儿园表演、节日活动',
     price: 59.00,
     stock: 15,
     status: 'online',
     images: ['https://picsum.photos/400/300?random=6'],
-    category: '儿童',
     createTime: '2024-01-10T13:15:00Z',
     updateTime: '2024-01-10T13:15:00Z'
   },
   {
     id: 7,
     name: '学位服套装',
+    brand: '其他',
+    model: 'XW-2024-018',
+    category: '礼服',
+    subCategory: '学位服',
     description: '学士、硕士、博士服，学位典礼专用',
     price: 49.00,
     stock: 50,
     status: 'pending',
     images: ['https://picsum.photos/400/300?random=7'],
-    category: '礼服',
     createTime: '2024-01-09T08:00:00Z',
     updateTime: '2024-01-09T08:00:00Z'
   },
   {
     id: 8,
     name: 'cosplay服装道具套装',
+    brand: '其他',
+    model: 'CP-2024-020',
+    category: '角色扮演',
+    subCategory: '动漫服装',
     description: '热门动漫角色服装，高品质cosplay道具',
     price: 259.00,
     stock: 7,
     status: 'online',
     images: ['https://picsum.photos/400/300?random=8'],
-    category: '角色扮演',
     createTime: '2024-01-08T20:30:00Z',
     updateTime: '2024-01-08T20:30:00Z'
   }
