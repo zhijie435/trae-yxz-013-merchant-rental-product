@@ -4,6 +4,25 @@ export type RentalMethod = 'daily' | 'weekly' | 'monthly' | 'custom'
 
 export type MinimumRentalTime = 'none' | '1day' | '3days' | '1week' | '1month'
 
+export type DeliveryMethod = 'express' | 'installer'
+
+export interface ExpressDeliveryConfig {
+  method: 'express'
+  expressCompany: string
+  trackingNumber: string
+  estimatedDeliveryDays: number
+}
+
+export interface InstallerDeliveryConfig {
+  method: 'installer'
+  installerName: string
+  installerPhone: string
+  serviceFee: number
+  serviceDescription: string
+}
+
+export type DeliveryConfig = ExpressDeliveryConfig | InstallerDeliveryConfig
+
 export interface ProductSpecification {
   label: string
   value: string
@@ -37,6 +56,7 @@ export interface Product {
   video?: string
   specifications?: ProductSpecification[]
   rentalConfig?: RentalConfig
+  deliveryConfig?: DeliveryConfig
   createTime: string
   updateTime: string
 }
@@ -192,4 +212,22 @@ export const MINIMUM_RENTAL_TIME_OPTIONS = [
   { value: '3days', label: '3天起租' },
   { value: '1week', label: '1周起租' },
   { value: '1month', label: '1月起租' }
+]
+
+export const EXPRESS_COMPANY_OPTIONS = [
+  '顺丰速运',
+  '圆通速递',
+  '中通快递',
+  '韵达快递',
+  '申通快递',
+  '极兔速递',
+  '京东物流',
+  '邮政EMS',
+  '德邦快递',
+  '其他'
+]
+
+export const DELIVERY_METHOD_OPTIONS = [
+  { value: 'express', label: '快递交付', description: '填写快递单号和快递公司' },
+  { value: 'installer', label: '专业操作员现场交付', description: '专业人员上门安装交付' }
 ]

@@ -3,8 +3,8 @@ import { ref, watch } from 'vue'
 import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElMessage, ElImage, ElIcon } from 'element-plus'
 import { Plus, Delete, VideoPlay, InfoFilled } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
-import { CATEGORY_OPTIONS, BRAND_OPTIONS, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS } from '@/types/product'
-import type { ProductSpecification, RentalConfig, SpecificationOption } from '@/types/product'
+import { CATEGORY_OPTIONS, BRAND_OPTIONS, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS, EXPRESS_COMPANY_OPTIONS, DELIVERY_METHOD_OPTIONS } from '@/types/product'
+import type { ProductSpecification, RentalConfig, SpecificationOption, DeliveryConfig } from '@/types/product'
 
 interface Props {
   visible: boolean
@@ -37,6 +37,12 @@ const formData = ref<Partial<Product>>({
     minimumRentalTime: 'none',
     depositAmount: 0,
     specificationOptions: []
+  },
+  deliveryConfig: {
+    method: 'express',
+    expressCompany: '',
+    trackingNumber: '',
+    estimatedDeliveryDays: 3
   }
 })
 
@@ -57,6 +63,12 @@ watch(() => props.visible, (val) => {
         minimumRentalTime: 'none',
         depositAmount: 0,
         specificationOptions: []
+      },
+      deliveryConfig: props.product.deliveryConfig || {
+        method: 'express',
+        expressCompany: '',
+        trackingNumber: '',
+        estimatedDeliveryDays: 3
       }
     }
   } else {
@@ -83,6 +95,12 @@ const resetForm = () => {
       minimumRentalTime: 'none',
       depositAmount: 0,
       specificationOptions: []
+    },
+    deliveryConfig: {
+      method: 'express',
+      expressCompany: '',
+      trackingNumber: '',
+      estimatedDeliveryDays: 3
     }
   }
   newImageUrl.value = ''
@@ -217,6 +235,25 @@ const handleValueAdd = (specIndex: number) => {
 const handleValueRemove = (specIndex: number, valueIndex: number) => {
   if (formData.value.rentalConfig?.specificationOptions) {
     formData.value.rentalConfig.specificationOptions[specIndex].values.splice(valueIndex, 1)
+  }
+}
+
+const handleDeliveryMethodChange = (method: 'express' | 'installer') => {
+  if (method === 'express') {
+    formData.value.deliveryConfig = {
+      method: 'express',
+      expressCompany: '',
+      trackingNumber: '',
+      estimatedDeliveryDays: 3
+    }
+  } else {
+    formData.value.deliveryConfig = {
+      method: 'installer',
+      installerName: '',
+      installerPhone: '',
+      serviceFee: 0,
+      serviceDescription: ''
+    }
   }
 }
 </script>
@@ -621,6 +658,117 @@ const handleValueRemove = (specIndex: number, valueIndex: number) => {
             <span>配置租赁的基本规则，包括最低起租数量、计费方式和押金要求</span>
           </div>
         </div>
+
+        <div class="form-section">
+          <h3 class="section-title">
+            交付设置
+            <span class="text-xs text-gray-400 ml-2">(选择交付方式)</span>
+          </h3>
+
+          <div class="delivery-method-selector">
+            <el-radio-group
+              v-model="formData.deliveryConfig!.method"
+              @change="handleDeliveryMethodChange"
+              class="delivery-method-group"
+            >
+              <el-radio-button
+                v-for="method in DELIVERY_METHOD_OPTIONS"
+                :key="method.value"
+                :value="method.value"
+                :label="method.value"
+              >
+                <div class="delivery-method-option">
+                  <div class="delivery-method-label">{{ method.label }}</div>
+                  <div class="delivery-method-desc">{{ method.description }}</div>
+                </div>
+              </el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <div v-if="formData.deliveryConfig!.method === 'express'" class="delivery-form express-form">
+            <el-form-item label="快递公司" required class="config-item">
+              <el-select
+                v-model="formData.deliveryConfig!.expressCompany"
+                placeholder="请选择快递公司"
+                class="w-full"
+                filterable
+                allow-create
+              >
+                <el-option
+                  v-for="company in EXPRESS_COMPANY_OPTIONS"
+                  :key="company"
+                  :label="company"
+                  :value="company"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="快递单号" required class="config-item">
+              <el-input
+                v-model="formData.deliveryConfig!.trackingNumber"
+                placeholder="请输入快递单号"
+                class="w-full"
+              />
+            </el-form-item>
+
+            <el-form-item label="预计配送天数" class="config-item">
+              <el-input-number
+                v-model="formData.deliveryConfig!.estimatedDeliveryDays"
+                :min="1"
+                :max="30"
+                :step="1"
+                controls-position="right"
+                class="w-full"
+              />
+              <span class="ml-2 text-gray-500 text-sm">天</span>
+            </el-form-item>
+          </div>
+
+          <div v-else-if="formData.deliveryConfig!.method === 'installer'" class="delivery-form installer-form">
+            <el-form-item label="操作员姓名" required class="config-item">
+              <el-input
+                v-model="formData.deliveryConfig!.installerName"
+                placeholder="请输入专业操作员姓名"
+                class="w-full"
+              />
+            </el-form-item>
+
+            <el-form-item label="联系电话" required class="config-item">
+              <el-input
+                v-model="formData.deliveryConfig!.installerPhone"
+                placeholder="请输入联系电话"
+                class="w-full"
+              />
+            </el-form-item>
+
+            <el-form-item label="服务费用" class="config-item">
+              <el-input-number
+                v-model="formData.deliveryConfig!.serviceFee"
+                :min="0"
+                :precision="2"
+                :step="10"
+                controls-position="right"
+                class="w-full"
+              />
+              <span class="ml-2 text-gray-500 text-sm">元</span>
+            </el-form-item>
+
+            <el-form-item label="服务说明" class="config-item">
+              <el-input
+                v-model="formData.deliveryConfig!.serviceDescription"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入专业操作员现场交付的服务说明"
+                class="w-full"
+              />
+            </el-form-item>
+          </div>
+
+          <div class="delivery-tip">
+            <el-icon><InfoFilled /></el-icon>
+            <span>选择合适的交付方式，快递交付需填写快递信息，专业操作员交付需填写服务人员信息</span>
+          </div>
+        </div>
       </el-form>
     </div>
 
@@ -963,6 +1111,77 @@ const handleValueRemove = (specIndex: number, valueIndex: number) => {
 @media (max-width: 768px) {
   .rental-config-form {
     grid-template-columns: 1fr;
+  }
+}
+
+.delivery-method-selector {
+  margin-bottom: 20px;
+}
+
+.delivery-method-group {
+  display: flex;
+  gap: 12px;
+}
+
+.delivery-method-group :deep(.el-radio-button) {
+  flex: 1;
+}
+
+.delivery-method-group :deep(.el-radio-button__inner) {
+  width: 100%;
+  height: auto;
+  padding: 16px 20px;
+  white-space: normal;
+  text-align: left;
+}
+
+.delivery-method-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delivery-method-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #303133;
+}
+
+.delivery-method-desc {
+  font-size: 12px;
+  color: #909399;
+}
+
+.delivery-form {
+  margin-top: 16px;
+  padding: 20px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+}
+
+.express-form,
+.installer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.delivery-tip {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .delivery-method-group {
+    flex-direction: column;
   }
 }
 </style>

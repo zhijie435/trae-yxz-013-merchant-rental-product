@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon } from 'element-plus'
-import { Document, List, Setting, Collection } from '@element-plus/icons-vue'
+import { Document, List, Setting, Collection, Van } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
-import { STATUS_CONFIG, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS } from '@/types/product'
+import { STATUS_CONFIG, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS, DELIVERY_METHOD_OPTIONS } from '@/types/product'
 
 interface Props {
   visible: boolean
@@ -47,6 +47,11 @@ const getRentalMethodLabel = (value: string) => {
 const getMinimumRentalTimeLabel = (value: string) => {
   const time = MINIMUM_RENTAL_TIME_OPTIONS.find(t => t.value === value)
   return time?.label || value
+}
+
+const getDeliveryMethodLabel = (value: string) => {
+  const method = DELIVERY_METHOD_OPTIONS.find(m => m.value === value)
+  return method?.label || value
 }
 </script>
 
@@ -225,6 +230,79 @@ const getMinimumRentalTimeLabel = (value: string) => {
               </div>
             </div>
           </div>
+
+          <template v-if="product.deliveryConfig">
+            <el-divider />
+            <h3 class="section-subtitle">
+              <el-icon><Van /></el-icon>
+              交付设置
+            </h3>
+            <div class="delivery-info">
+              <div class="delivery-info-item">
+                <div class="delivery-info-label">交付方式</div>
+                <div class="delivery-info-value">
+                  <el-tag :type="product.deliveryConfig.method === 'express' ? 'primary' : 'success'" size="small">
+                    {{ getDeliveryMethodLabel(product.deliveryConfig.method) }}
+                  </el-tag>
+                </div>
+              </div>
+
+              <template v-if="product.deliveryConfig.method === 'express'">
+                <div class="delivery-info-item">
+                  <div class="delivery-info-label">快递公司</div>
+                  <div class="delivery-info-value">
+                    {{ product.deliveryConfig.expressCompany || '未设置' }}
+                  </div>
+                </div>
+
+                <div class="delivery-info-item">
+                  <div class="delivery-info-label">快递单号</div>
+                  <div class="delivery-info-value">
+                    {{ product.deliveryConfig.trackingNumber || '未设置' }}
+                  </div>
+                </div>
+
+                <div class="delivery-info-item">
+                  <div class="delivery-info-label">预计配送天数</div>
+                  <div class="delivery-info-value">
+                    {{ product.deliveryConfig.estimatedDeliveryDays }} 天
+                  </div>
+                </div>
+              </template>
+
+              <template v-else>
+                <div class="delivery-info-item">
+                  <div class="delivery-info-label">操作员姓名</div>
+                  <div class="delivery-info-value">
+                    {{ product.deliveryConfig.installerName || '未设置' }}
+                  </div>
+                </div>
+
+                <div class="delivery-info-item">
+                  <div class="delivery-info-label">联系电话</div>
+                  <div class="delivery-info-value">
+                    {{ product.deliveryConfig.installerPhone || '未设置' }}
+                  </div>
+                </div>
+
+                <div class="delivery-info-item">
+                  <div class="delivery-info-label">服务费用</div>
+                  <div class="delivery-info-value">
+                    <span class="text-red-500 font-bold">
+                      ¥{{ (product.deliveryConfig.serviceFee || 0).toFixed(2) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="delivery-info-item" v-if="product.deliveryConfig.serviceDescription">
+                  <div class="delivery-info-label">服务说明</div>
+                  <div class="delivery-info-value">
+                    {{ product.deliveryConfig.serviceDescription }}
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -384,6 +462,39 @@ const getMinimumRentalTimeLabel = (value: string) => {
   font-size: 14px;
   color: #303133;
   font-weight: 600;
+}
+
+.delivery-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.delivery-info-item {
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s;
+}
+
+.delivery-info-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.delivery-info-label {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.delivery-info-value {
+  font-size: 14px;
+  color: #303133;
+  font-weight: 500;
 }
 
 @media (max-width: 1200px) {
