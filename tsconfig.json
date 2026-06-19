@@ -15,12 +15,18 @@
     },
     "types": [
       "node",
-      "express"
+      "express",
+      "vitest/globals"
     ]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.vue",
-    "api"
+    "api",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "coverage"
   ]
 }

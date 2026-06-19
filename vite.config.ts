@@ -3,8 +3,10 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import Inspector from 'unplugin-vue-dev-locator/vite'
 import traeBadgePlugin from 'vite-plugin-trae-solo-badge'
+import { fileURLToPath } from 'url'
 
-// https://vite.dev/config/
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
 export default defineConfig({
   build: {
     sourcemap: 'hidden',
@@ -24,7 +26,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // ✅ 定义 @ = src
+      '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
