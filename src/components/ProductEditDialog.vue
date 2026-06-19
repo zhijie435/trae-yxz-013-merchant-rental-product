@@ -3,8 +3,8 @@ import { ref, watch } from 'vue'
 import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElMessage, ElImage, ElIcon } from 'element-plus'
 import { Plus, Delete, VideoPlay, InfoFilled } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
-import { CATEGORY_OPTIONS, BRAND_OPTIONS } from '@/types/product'
-import type { ProductSpecification } from '@/types/product'
+import { CATEGORY_OPTIONS, BRAND_OPTIONS, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS } from '@/types/product'
+import type { ProductSpecification, RentalConfig, SpecificationOption } from '@/types/product'
 
 interface Props {
   visible: boolean
@@ -30,7 +30,14 @@ const formData = ref<Partial<Product>>({
   stock: 0,
   images: [],
   video: '',
-  specifications: []
+  specifications: [],
+  rentalConfig: {
+    minimumQuantity: 1,
+    rentalMethod: 'daily',
+    minimumRentalTime: 'none',
+    depositAmount: 0,
+    specificationOptions: []
+  }
 })
 
 const newImageUrl = ref('')
@@ -43,7 +50,14 @@ watch(() => props.visible, (val) => {
       ...props.product,
       images: props.product.images || [],
       video: props.product.video || '',
-      specifications: props.product.specifications || []
+      specifications: props.product.specifications || [],
+      rentalConfig: props.product.rentalConfig || {
+        minimumQuantity: 1,
+        rentalMethod: 'daily',
+        minimumRentalTime: 'none',
+        depositAmount: 0,
+        specificationOptions: []
+      }
     }
   } else {
     resetForm()
@@ -62,7 +76,14 @@ const resetForm = () => {
     stock: 0,
     images: [],
     video: '',
-    specifications: []
+    specifications: [],
+    rentalConfig: {
+      minimumQuantity: 1,
+      rentalMethod: 'daily',
+      minimumRentalTime: 'none',
+      depositAmount: 0,
+      specificationOptions: []
+    }
   }
   newImageUrl.value = ''
   newVideoUrl.value = ''
@@ -159,6 +180,43 @@ const handleSpecificationAdd = () => {
 const handleSpecificationRemove = (index: number) => {
   if (formData.value.specifications) {
     formData.value.specifications.splice(index, 1)
+  }
+}
+
+const handleSpecOptionAdd = () => {
+  if (!formData.value.rentalConfig) {
+    formData.value.rentalConfig = {
+      minimumQuantity: 1,
+      rentalMethod: 'daily',
+      minimumRentalTime: 'none',
+      depositAmount: 0,
+      specificationOptions: []
+    }
+  }
+  if (!formData.value.rentalConfig.specificationOptions) {
+    formData.value.rentalConfig.specificationOptions = []
+  }
+  formData.value.rentalConfig.specificationOptions.push({
+    label: '',
+    values: []
+  })
+}
+
+const handleSpecOptionRemove = (index: number) => {
+  if (formData.value.rentalConfig?.specificationOptions) {
+    formData.value.rentalConfig.specificationOptions.splice(index, 1)
+  }
+}
+
+const handleValueAdd = (specIndex: number) => {
+  if (formData.value.rentalConfig?.specificationOptions) {
+    formData.value.rentalConfig.specificationOptions[specIndex].values.push('')
+  }
+}
+
+const handleValueRemove = (specIndex: number, valueIndex: number) => {
+  if (formData.value.rentalConfig?.specificationOptions) {
+    formData.value.rentalConfig.specificationOptions[specIndex].values.splice(valueIndex, 1)
   }
 }
 </script>
@@ -417,6 +475,152 @@ const handleSpecificationRemove = (index: number) => {
             <span>建议添加常用的规格参数，如：材质、尺码、颜色、重量等</span>
           </div>
         </div>
+
+        <div class="form-section">
+          <h3 class="section-title">
+            规格选择配置
+            <span class="text-xs text-gray-400 ml-2">(可选，如颜色、尺码等)</span>
+          </h3>
+
+          <div class="spec-options-list" v-if="formData.rentalConfig?.specificationOptions && formData.rentalConfig.specificationOptions.length > 0">
+            <div
+              v-for="(specOpt, specIndex) in formData.rentalConfig.specificationOptions"
+              :key="specIndex"
+              class="spec-option-item"
+            >
+              <div class="spec-option-header">
+                <el-input
+                  v-model="specOpt.label"
+                  placeholder="规格名称（如：颜色、尺码）"
+                  class="spec-option-label-input"
+                />
+                <el-button
+                  type="danger"
+                  size="small"
+                  circle
+                  @click="handleSpecOptionRemove(specIndex)"
+                >
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </div>
+
+              <div class="spec-values-list">
+                <div
+                  v-for="(value, valueIndex) in specOpt.values"
+                  :key="valueIndex"
+                  class="spec-value-item"
+                >
+                  <el-input
+                    v-model="specOpt.values[valueIndex]"
+                    placeholder="可选值"
+                    class="spec-value-input"
+                  />
+                  <el-button
+                    type="danger"
+                    size="small"
+                    circle
+                    @click="handleValueRemove(specIndex, valueIndex)"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </div>
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="handleValueAdd(specIndex)"
+                  class="add-value-btn"
+                >
+                  <el-icon class="mr-1"><Plus /></el-icon>
+                  添加可选值
+                </el-button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="spec-options-empty">
+            <span class="text-gray-400">暂无规格选择配置，如需要请添加（如颜色、尺码等）</span>
+          </div>
+
+          <div class="spec-actions">
+            <el-button
+              type="primary"
+              size="default"
+              @click="handleSpecOptionAdd"
+              class="spec-add-btn"
+            >
+              <el-icon class="mr-1"><Plus /></el-icon>
+              添加规格选项
+            </el-button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">
+            租赁配置
+            <span class="text-xs text-gray-400 ml-2">(起租台数、租赁方式、押金等)</span>
+          </h3>
+
+          <div class="rental-config-form">
+            <el-form-item label="起租台数" class="config-item">
+              <el-input-number
+                v-model="formData.rentalConfig!.minimumQuantity"
+                :min="1"
+                :max="999"
+                :step="1"
+                controls-position="right"
+                class="w-full"
+              />
+              <span class="ml-2 text-gray-500 text-sm">台</span>
+            </el-form-item>
+
+            <el-form-item label="租赁方式" class="config-item">
+              <el-select
+                v-model="formData.rentalConfig!.rentalMethod"
+                placeholder="请选择租赁方式"
+                class="w-full"
+              >
+                <el-option
+                  v-for="method in RENTAL_METHOD_OPTIONS"
+                  :key="method.value"
+                  :label="method.label"
+                  :value="method.value"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="起租时间规则" class="config-item">
+              <el-select
+                v-model="formData.rentalConfig!.minimumRentalTime"
+                placeholder="请选择起租时间"
+                class="w-full"
+              >
+                <el-option
+                  v-for="time in MINIMUM_RENTAL_TIME_OPTIONS"
+                  :key="time.value"
+                  :label="time.label"
+                  :value="time.value"
+                />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="押金设置" class="config-item">
+              <el-input-number
+                v-model="formData.rentalConfig!.depositAmount"
+                :min="0"
+                :precision="2"
+                :step="100"
+                controls-position="right"
+                class="w-full"
+              />
+              <span class="ml-2 text-gray-500 text-sm">元</span>
+            </el-form-item>
+          </div>
+
+          <div class="rental-config-tip">
+            <el-icon><InfoFilled /></el-icon>
+            <span>配置租赁的基本规则，包括最低起租数量、计费方式和押金要求</span>
+          </div>
+        </div>
       </el-form>
     </div>
 
@@ -663,5 +867,102 @@ const handleSpecificationRemove = (index: number) => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.spec-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.spec-option-item {
+  padding: 16px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s;
+}
+
+.spec-option-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.spec-option-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.spec-option-label-input {
+  flex: 1;
+}
+
+.spec-values-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spec-value-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.spec-value-input {
+  flex: 1;
+}
+
+.add-value-btn {
+  margin-top: 8px;
+  width: fit-content;
+}
+
+.spec-options-empty {
+  text-align: center;
+  padding: 32px;
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  margin-top: 16px;
+  transition: all 0.3s;
+}
+
+.spec-options-empty:hover {
+  border-color: #409eff;
+  background: #f5f7fa;
+}
+
+.rental-config-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.config-item {
+  margin-bottom: 16px;
+}
+
+.rental-config-tip {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .rental-config-form {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

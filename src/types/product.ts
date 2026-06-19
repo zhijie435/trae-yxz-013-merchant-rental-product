@@ -1,8 +1,25 @@
 export type ProductStatus = 'all' | 'online' | 'pending' | 'rejected' | 'offline'
 
+export type RentalMethod = 'daily' | 'weekly' | 'monthly' | 'custom'
+
+export type MinimumRentalTime = 'none' | '1day' | '3days' | '1week' | '1month'
+
 export interface ProductSpecification {
   label: string
   value: string
+}
+
+export interface SpecificationOption {
+  label: string
+  values: string[]
+}
+
+export interface RentalConfig {
+  minimumQuantity: number
+  rentalMethod: RentalMethod
+  minimumRentalTime: MinimumRentalTime
+  depositAmount: number
+  specificationOptions?: SpecificationOption[]
 }
 
 export interface Product {
@@ -19,6 +36,7 @@ export interface Product {
   images: string[]
   video?: string
   specifications?: ProductSpecification[]
+  rentalConfig?: RentalConfig
   createTime: string
   updateTime: string
 }
@@ -159,4 +177,19 @@ export const BRAND_OPTIONS = [
   '利郎',
   '太子龙',
   '其他'
+]
+
+export const RENTAL_METHOD_OPTIONS = [
+  { value: 'daily', label: '按天计费' },
+  { value: 'weekly', label: '按周计费' },
+  { value: 'monthly', label: '按月计费' },
+  { value: 'custom', label: '自定义计费' }
+]
+
+export const MINIMUM_RENTAL_TIME_OPTIONS = [
+  { value: 'none', label: '无限制' },
+  { value: '1day', label: '1天起租' },
+  { value: '3days', label: '3天起租' },
+  { value: '1week', label: '1周起租' },
+  { value: '1month', label: '1月起租' }
 ]

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ElDialog, ElDescriptions, ElDescriptionsItem, ElImage, ElTag, ElDivider, ElIcon } from 'element-plus'
-import { Document, List } from '@element-plus/icons-vue'
+import { Document, List, Setting, Collection } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
-import { STATUS_CONFIG } from '@/types/product'
+import { STATUS_CONFIG, RENTAL_METHOD_OPTIONS, MINIMUM_RENTAL_TIME_OPTIONS } from '@/types/product'
 
 interface Props {
   visible: boolean
@@ -37,6 +37,16 @@ const formatDate = (dateStr: string) => {
 
 const handleClose = () => {
   emit('update:visible', false)
+}
+
+const getRentalMethodLabel = (value: string) => {
+  const method = RENTAL_METHOD_OPTIONS.find(m => m.value === value)
+  return method?.label || value
+}
+
+const getMinimumRentalTimeLabel = (value: string) => {
+  const time = MINIMUM_RENTAL_TIME_OPTIONS.find(t => t.value === value)
+  return time?.label || value
 }
 </script>
 
@@ -128,12 +138,12 @@ const handleClose = () => {
           </el-descriptions>
         </div>
 
-        <div class="detail-section specifications" v-if="product.specifications && product.specifications.length > 0">
+        <div class="detail-section specifications">
           <h3 class="section-title">
             <el-icon><List /></el-icon>
             规格参数
           </h3>
-          <div class="spec-list">
+          <div v-if="product.specifications && product.specifications.length > 0" class="spec-list">
             <div
               v-for="(spec, index) in product.specifications"
               :key="index"
@@ -141,6 +151,78 @@ const handleClose = () => {
             >
               <div class="spec-label">{{ spec.label }}</div>
               <div class="spec-value">{{ spec.value }}</div>
+            </div>
+          </div>
+          <div v-else class="spec-empty">
+            <span class="text-gray-400">暂无规格参数</span>
+          </div>
+
+          <el-divider v-if="product.rentalConfig?.specificationOptions && product.rentalConfig.specificationOptions.length > 0" />
+
+          <h3 v-if="product.rentalConfig?.specificationOptions && product.rentalConfig.specificationOptions.length > 0" class="section-subtitle">
+            <el-icon><Collection /></el-icon>
+            规格选择
+          </h3>
+          <div v-if="product.rentalConfig?.specificationOptions && product.rentalConfig.specificationOptions.length > 0" class="spec-options-list">
+            <div
+              v-for="(specOpt, index) in product.rentalConfig.specificationOptions"
+              :key="index"
+              class="spec-option-item"
+            >
+              <div class="spec-option-label">{{ specOpt.label }}</div>
+              <div class="spec-option-values">
+                <el-tag
+                  v-for="(value, valueIndex) in specOpt.values"
+                  :key="valueIndex"
+                  size="small"
+                  type="info"
+                  class="spec-value-tag"
+                >
+                  {{ value }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section rental-config" v-if="product.rentalConfig">
+          <h3 class="section-title">
+            <el-icon><Setting /></el-icon>
+            租赁配置
+          </h3>
+          <div class="rental-info">
+            <div class="rental-info-item">
+              <div class="rental-info-label">起租台数</div>
+              <div class="rental-info-value">
+                {{ product.rentalConfig.minimumQuantity }} 台
+              </div>
+            </div>
+
+            <div class="rental-info-item">
+              <div class="rental-info-label">租赁方式</div>
+              <div class="rental-info-value">
+                <el-tag type="success" size="small">
+                  {{ getRentalMethodLabel(product.rentalConfig.rentalMethod) }}
+                </el-tag>
+              </div>
+            </div>
+
+            <div class="rental-info-item">
+              <div class="rental-info-label">起租时间规则</div>
+              <div class="rental-info-value">
+                <el-tag type="warning" size="small">
+                  {{ getMinimumRentalTimeLabel(product.rentalConfig.minimumRentalTime) }}
+                </el-tag>
+              </div>
+            </div>
+
+            <div class="rental-info-item">
+              <div class="rental-info-label">押金设置</div>
+              <div class="rental-info-value">
+                <span class="text-red-500 font-bold text-lg">
+                  ¥{{ product.rentalConfig.depositAmount.toFixed(2) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -158,7 +240,7 @@ const handleClose = () => {
 <style scoped>
 .detail-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 24px;
 }
 
@@ -215,6 +297,99 @@ const handleClose = () => {
   color: #303133;
   font-size: 14px;
   padding-left: 12px;
+}
+
+.spec-empty {
+  text-align: center;
+  padding: 24px;
+  color: #909399;
+  font-size: 14px;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
+  margin-top: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spec-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.spec-option-item {
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s;
+}
+
+.spec-option-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.spec-option-label {
+  font-weight: 600;
+  color: #606266;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.spec-option-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spec-value-tag {
+  margin: 2px;
+}
+
+.rental-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rental-info-item {
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s;
+}
+
+.rental-info-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.rental-info-label {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.rental-info-value {
+  font-size: 14px;
+  color: #303133;
+  font-weight: 600;
+}
+
+@media (max-width: 1200px) {
+  .detail-layout {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 768px) {
