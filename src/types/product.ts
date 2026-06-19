@@ -57,6 +57,7 @@ export interface Product {
   specifications?: ProductSpecification[]
   rentalConfig?: RentalConfig
   deliveryConfig?: DeliveryConfig
+  rejectReason?: string
   createTime: string
   updateTime: string
 }

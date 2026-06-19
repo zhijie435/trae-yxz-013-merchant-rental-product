@@ -207,6 +207,14 @@ const isRentalDaysValid = computed(() => {
               </el-tag>
             </el-descriptions-item>
 
+            <el-descriptions-item v-if="product.status === 'rejected' && product.rejectReason" label="驳回原因">
+              <div class="reject-reason">
+                <div class="reject-reason-content">
+                  {{ product.rejectReason }}
+                </div>
+              </div>
+            </el-descriptions-item>
+
             <el-descriptions-item label="品牌">
               {{ product.brand || '暂无' }}
             </el-descriptions-item>
@@ -571,6 +579,21 @@ const isRentalDaysValid = computed(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.reject-reason {
+  padding: 12px;
+  background: #fef0f0;
+  border: 1px solid #fde2e2;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.reject-reason-content {
+  color: #f56c6c;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
 }
 
 .spec-list {

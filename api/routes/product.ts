@@ -14,6 +14,7 @@ interface Product {
   status: 'online' | 'pending' | 'rejected' | 'offline'
   images: string[]
   video?: string
+  rejectReason?: string
   createTime: string
   updateTime: string
 }
@@ -78,6 +79,7 @@ let products: Product[] = [
     price: 399.00,
     stock: 3,
     status: 'rejected',
+    rejectReason: '商品图片不符合要求，请上传清晰的实物图片，避免使用网络素材图。',
     images: ['https://picsum.photos/400/300?random=4'],
     createTime: '2024-01-12T16:00:00Z',
     updateTime: '2024-01-12T16:00:00Z'
