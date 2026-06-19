@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElSelect, ElOption, ElButton, ElMessage, ElImage, ElIcon } from 'element-plus'
-import { Plus, Delete, VideoPlay } from '@element-plus/icons-vue'
+import { Plus, Delete, VideoPlay, InfoFilled } from '@element-plus/icons-vue'
 import type { Product } from '@/types/product'
 import { CATEGORY_OPTIONS, BRAND_OPTIONS } from '@/types/product'
+import type { ProductSpecification } from '@/types/product'
 
 interface Props {
   visible: boolean
@@ -28,7 +29,8 @@ const formData = ref<Partial<Product>>({
   price: 0,
   stock: 0,
   images: [],
-  video: ''
+  video: '',
+  specifications: []
 })
 
 const newImageUrl = ref('')
@@ -40,7 +42,8 @@ watch(() => props.visible, (val) => {
     formData.value = {
       ...props.product,
       images: props.product.images || [],
-      video: props.product.video || ''
+      video: props.product.video || '',
+      specifications: props.product.specifications || []
     }
   } else {
     resetForm()
@@ -58,7 +61,8 @@ const resetForm = () => {
     price: 0,
     stock: 0,
     images: [],
-    video: ''
+    video: '',
+    specifications: []
   }
   newImageUrl.value = ''
   newVideoUrl.value = ''
@@ -140,6 +144,22 @@ const handleVideoRemove = () => {
 const handleCategoryChange = (value: string) => {
   formData.value.category = value
   formData.value.subCategory = ''
+}
+
+const handleSpecificationAdd = () => {
+  if (!formData.value.specifications) {
+    formData.value.specifications = []
+  }
+  formData.value.specifications.push({
+    label: '',
+    value: ''
+  })
+}
+
+const handleSpecificationRemove = (index: number) => {
+  if (formData.value.specifications) {
+    formData.value.specifications.splice(index, 1)
+  }
 }
 </script>
 
@@ -341,6 +361,62 @@ const handleCategoryChange = (value: string) => {
             <span>支持 MP4、WebM 等主流视频格式，建议时长30秒-1分钟</span>
           </div>
         </div>
+
+        <div class="form-section">
+          <h3 class="section-title">
+            规格参数
+            <span class="text-xs text-gray-400 ml-2">(每行一个参数)</span>
+          </h3>
+
+          <div class="spec-list" v-if="formData.specifications && formData.specifications.length > 0">
+            <div
+              v-for="(spec, index) in formData.specifications"
+              :key="index"
+              class="spec-item"
+            >
+              <el-input
+                v-model="spec.label"
+                placeholder="参数名称"
+                class="spec-input"
+              />
+              <el-input
+                v-model="spec.value"
+                placeholder="参数值"
+                class="spec-input"
+              />
+              <el-button
+                type="danger"
+                size="small"
+                circle
+                @click="handleSpecificationRemove(index)"
+                class="spec-remove-btn"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
+          </div>
+
+          <div v-else class="spec-empty">
+            <span class="text-gray-400">暂无规格参数，请点击下方按钮添加</span>
+          </div>
+
+          <div class="spec-actions">
+            <el-button
+              type="primary"
+              size="default"
+              @click="handleSpecificationAdd"
+              class="spec-add-btn"
+            >
+              <el-icon class="mr-1"><Plus /></el-icon>
+              添加规格参数
+            </el-button>
+          </div>
+
+          <div class="spec-tip">
+            <el-icon><InfoFilled /></el-icon>
+            <span>建议添加常用的规格参数，如：材质、尺码、颜色、重量等</span>
+          </div>
+        </div>
       </el-form>
     </div>
 
@@ -520,5 +596,72 @@ const handleCategoryChange = (value: string) => {
 
 :deep(.el-cascader) {
   width: 100%;
+}
+
+.spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.spec-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s;
+}
+
+.spec-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.spec-input {
+  flex: 1;
+}
+
+.spec-remove-btn {
+  flex-shrink: 0;
+}
+
+.spec-empty {
+  text-align: center;
+  padding: 32px;
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  margin-top: 16px;
+  transition: all 0.3s;
+}
+
+.spec-empty:hover {
+  border-color: #409eff;
+  background: #f5f7fa;
+}
+
+.spec-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.spec-add-btn {
+  width: 200px;
+}
+
+.spec-tip {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

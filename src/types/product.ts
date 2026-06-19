@@ -1,5 +1,10 @@
 export type ProductStatus = 'all' | 'online' | 'pending' | 'rejected' | 'offline'
 
+export interface ProductSpecification {
+  label: string
+  value: string
+}
+
 export interface Product {
   id: number
   name: string
@@ -13,6 +18,7 @@ export interface Product {
   status: Exclude<ProductStatus, 'all'>
   images: string[]
   video?: string
+  specifications?: ProductSpecification[]
   createTime: string
   updateTime: string
 }
